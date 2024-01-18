@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"runtime"
 
+	"code.gitea.io/gitea/event/infrastructure/kafka"
+	"code.gitea.io/gitea/event/infrastructure/redis"
 	"code.gitea.io/gitea/models"
 	asymkey_model "code.gitea.io/gitea/models/asymkey"
 	authmodel "code.gitea.io/gitea/models/auth"
@@ -165,6 +167,16 @@ func InitWebInstalled(ctx context.Context) {
 
 	// Finally start up the cron
 	cron.NewContext(ctx)
+}
+
+// in order to send statistic data, init redis and kafka
+// TODO: exit redis and kafka
+func InitMessageQueue() {
+	rediscfg := redis.SetDefault()
+	redis.Init(&rediscfg)
+
+	kafkacfg := kafka.SetDefault()
+	kafka.Init(&kafkacfg, nil, redis.RedisCli)
 }
 
 // NormalRoutes represents non install routes

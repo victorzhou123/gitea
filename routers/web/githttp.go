@@ -9,6 +9,7 @@ import (
 	"code.gitea.io/gitea/modules/context"
 	"code.gitea.io/gitea/modules/setting"
 	"code.gitea.io/gitea/modules/web"
+	"code.gitea.io/gitea/routers/web/middleware"
 	"code.gitea.io/gitea/routers/web/repo"
 	context_service "code.gitea.io/gitea/services/context"
 )
@@ -28,7 +29,7 @@ func requireSignIn(ctx *context.Context) {
 
 func gitHTTPRouters(m *web.Route) {
 	m.Group("", func() {
-		m.PostOptions("/git-upload-pack", repo.ServiceUploadPack)
+		m.PostOptions("/git-upload-pack", repo.ServiceUploadPack, middleware.GitCloneMessageMiddleware)
 		m.PostOptions("/git-receive-pack", repo.ServiceReceivePack)
 		m.GetOptions("/info/refs", repo.GetInfoRefs)
 		m.GetOptions("/HEAD", repo.GetTextFile("HEAD"))
