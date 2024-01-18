@@ -5,9 +5,12 @@ package routers
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"runtime"
 
+	"code.gitea.io/gitea/event/infrastructure/kafka"
+	"code.gitea.io/gitea/event/infrastructure/redis"
 	"code.gitea.io/gitea/models"
 	asymkey_model "code.gitea.io/gitea/models/asymkey"
 	authmodel "code.gitea.io/gitea/models/auth"
@@ -50,6 +53,9 @@ import (
 	"code.gitea.io/gitea/services/task"
 	"code.gitea.io/gitea/services/uinotification"
 	"code.gitea.io/gitea/services/webhook"
+
+	redislib "github.com/opensourceways/redis-lib"
+	"github.com/sirupsen/logrus"
 )
 
 func mustInit(fn func() error) {
@@ -165,6 +171,29 @@ func InitWebInstalled(ctx context.Context) {
 
 	// Finally start up the cron
 	cron.NewContext(ctx)
+}
+
+// in order to send statistic data, init redis and kafka
+// TODO: exit redis and kafka
+func InitMessageQueue() {
+	log := logrus.NewEntry(logrus.StandardLogger())
+
+	rediscfg := redis.SetDefault()
+	if err := redis.Init(&rediscfg); err != nil {
+		logrus.Errorf("internal error occurred, redis init err: %s", err.Error())
+	} else {
+		fmt.Println("init redis success!")
+	}
+
+	kafkacfg := kafka.SetDefault()
+	if err := kafka.Init(&kafkacfg, log, redislib.DAO()); err != nil {
+		logrus.Errorf("internal error occurred, kafka init err: %s", err.Error())
+	} else {
+		fmt.Println("init kafka success!")
+	}
+
+	fmt.Println("init message queue success!")
+
 }
 
 // NormalRoutes represents non install routes
